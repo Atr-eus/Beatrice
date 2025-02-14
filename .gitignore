@@ -1,0 +1,12 @@
+*
+!*.*
+!*/
+!LICENSE
+!README
+!Makefile
+
+**/*.o
+**/*.out
+**/*.exe
+
+.cache/
