@@ -19,7 +19,8 @@ typedef struct BencodeList {
 } bencodelist_t;
 
 typedef struct BencodeDictionary {
-  bencode_t *data;
+  char *key;
+  bencode_t *value;
   bencodedict_t *next;
 } bencodedict_t;
 
@@ -46,8 +47,6 @@ bencode_t *decode_integer(const char **bencoded) {
   res->type = BENCODE_INTEGER;
   res->data.integer = data;
 
-  printf("%d, %ld\n", res->type, res->data.integer);
-
   return res;
 }
 
@@ -64,17 +63,26 @@ bencode_t *decode_string(const char **bencoded) {
   res->data.string = strndup(*bencoded, content_length);
   *bencoded += content_length;
 
-  printf("%d, %s\n", res->type, res->data.string);
-
   return res;
 };
 
 bencode_t *decode_list(const char **bencoded) {
   (*bencoded)++;
 
+  // printf("[");
   bencodelist_t *head = NULL, **current = &head;
   while (**bencoded != 'e') {
     bencode_t *data = decode_bencode(bencoded);
+    // switch (data->type) {
+    // case BENCODE_INTEGER:
+    //   printf("%ld", data->data.integer);
+    //   break;
+    // case BENCODE_STRING:
+    //   printf("%s", data->data.string);
+    //   break;
+    // }
+    // printf(",");
+
     *current = malloc(sizeof(bencode_t));
     (*current)->data = data;
     (*current)->next = NULL;
@@ -86,10 +94,36 @@ bencode_t *decode_list(const char **bencoded) {
   res->type = BENCODE_LIST;
   res->data.list = head;
 
+  // printf("]");
   return res;
 };
 
-bencode_t *decode_dictionary(const char **bencoded) {};
+bencode_t *decode_dictionary(const char **bencoded) {
+  (*bencoded)++;
+
+  // printf("{\n");
+  bencodedict_t *head = NULL, **current = &head;
+  while (**bencoded != 'e') {
+    bencode_t *key = decode_string(bencoded), *value = decode_bencode(bencoded);
+    // printf("%s -> ", key->data.string);
+    // value->type == BENCODE_STRING ? printf("%s\n", value->data.string)
+    //                               : printf("%ld\n", value->data.integer);
+
+    *current = malloc(sizeof(bencodedict_t));
+    (*current)->key = key->data.string;
+    (*current)->value = value;
+    (*current)->next = NULL;
+    current = &((*current)->next);
+  }
+  (*bencoded)++;
+
+  bencode_t *res = malloc(sizeof(bencode_t));
+  res->type = BENCODE_DICTIONARY;
+  res->data.dict = head;
+
+  // printf("}\n");
+  return res;
+};
 
 bencode_t *decode_bencode(const char **bencoded) {
   if (**bencoded == 'i')
