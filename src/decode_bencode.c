@@ -1,55 +1,107 @@
 #include "decode_bencode.h"
 #include "utility.h"
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-char *decode_string(const char **bencoded) {
-  const size_t content_length = atoi(*bencoded);
-  const char *separator_ptr = strchr(*bencoded, ':');
+typedef enum Type {
+  BENCODE_INTEGER,
+  BENCODE_STRING,
+  BENCODE_LIST,
+  BENCODE_DICTIONARY
+} type;
 
-  if (separator_ptr != NULL) {
-    char *decoded = (char *)malloc(content_length + 1);
-    strncpy(decoded, separator_ptr + 1, content_length);
-    decoded[content_length] = '\0';
+typedef struct BencodeList {
+  bencode_t *data;
+  bencodelist_t *next;
+} bencodelist_t;
 
-    return decoded;
-  } else {
-    throw_error("Invalid input.\n");
+typedef struct BencodeDictionary {
+  bencode_t *data;
+  bencodedict_t *next;
+} bencodedict_t;
 
+typedef struct BencodeData {
+  type type;
+  union {
+    int64_t integer;
+    char *string;
+    bencodelist_t *list;
+    bencodedict_t *dict;
+  } data;
+} bencode_t;
+
+bencode_t *decode_integer(const char **bencoded) {
+  (*bencoded)++;
+  char *it;
+  auto data = strtoll(*bencoded, &it, 10);
+
+  if (*it != 'e')
     return NULL;
+  *bencoded = it + 1;
+
+  auto res = (bencode_t *)malloc(sizeof(bencode_t));
+  res->type = BENCODE_INTEGER;
+  res->data.integer = data;
+
+  printf("%d, %ld\n", res->type, res->data.integer);
+
+  return res;
+}
+
+bencode_t *decode_string(const char **bencoded) {
+  char *it;
+  size_t content_length = strtol(*bencoded, &it, 10);
+
+  if (*it != ':' || content_length < 0)
+    return NULL;
+  *bencoded = it + 1;
+
+  auto res = (bencode_t *)malloc(sizeof(bencode_t));
+  res->type = BENCODE_STRING;
+  res->data.string = strndup(*bencoded, content_length);
+  *bencoded += content_length;
+
+  printf("%d, %s\n", res->type, res->data.string);
+
+  return res;
+};
+
+bencode_t *decode_list(const char **bencoded) {
+  (*bencoded)++;
+
+  bencodelist_t *head = NULL, **current = &head;
+  while (**bencoded != 'e') {
+    bencode_t *data = decode_bencode(bencoded);
+    *current = malloc(sizeof(bencode_t));
+    (*current)->data = data;
+    (*current)->next = NULL;
+    current = &((*current)->next);
   }
-}
+  (*bencoded)++;
 
-char *decode_integer(const char **bencoded) {
-  const size_t content_length = strlen(*bencoded) - 2;
+  auto res = (bencode_t *)malloc(sizeof(bencode_t));
+  res->type = BENCODE_LIST;
+  res->data.list = head;
 
-  char *decoded = (char *)malloc(content_length + 1);
-  strncpy(decoded, *bencoded + 1, content_length);
-  decoded[content_length] = '\0';
+  return res;
+};
 
-  return decoded;
-}
+bencode_t *decode_dictionary(const char **bencoded) {};
 
-char *decode_list(const char **bencoded) { return "hello list"; }
-
-char *decode_dictionary(const char **bencoded) { return "hello dictionary"; }
-
-char *decode_bencode(const char **bencoded) {
-  const char first = *bencoded[0], last = *(*bencoded + strlen(*bencoded) - 1);
-
-  if (is_char_digit(*bencoded[0])) {
-    return decode_string(bencoded);
-  } else if (first == 'i' && last == 'e') {
+bencode_t *decode_bencode(const char **bencoded) {
+  if (**bencoded == 'i')
     return decode_integer(bencoded);
-  } else if (first == 'l' && last == 'e') {
+  else if (is_char_digit(**bencoded))
+    return decode_string(bencoded);
+  else if (**bencoded == 'l')
     return decode_list(bencoded);
-  } else if (first == 'd' && last == 'e') {
+  else if (**bencoded == 'd')
     return decode_dictionary(bencoded);
-  } else {
-    throw_error("Invalid input.\n");
-
+  else {
+    throw_error("Invalid input format.\n");
     return NULL;
   }
 }

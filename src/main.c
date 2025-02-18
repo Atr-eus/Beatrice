@@ -9,8 +9,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  char *out = decode_bencode((const char **)&argv[1]);
-  printf("%s\n", out);
+  bencode_t *out = decode_bencode((const char **)&argv[1]);
   free(out);
 
   return 0;
