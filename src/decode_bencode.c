@@ -1,5 +1,6 @@
 #include "decode_bencode.h"
 #include "utility.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,13 +8,13 @@
 bencode_t *decode_integer(const char **bencoded) {
   (*bencoded)++;
   char *it;
-  auto data = strtoll(*bencoded, &it, 10);
+  int64_t data = strtoll(*bencoded, &it, 10);
 
   if (*it != 'e')
     return NULL;
   *bencoded = it + 1;
 
-  auto res = (bencode_t *)malloc(sizeof(bencode_t));
+  bencode_t *res = malloc(sizeof(bencode_t));
   res->type = BENCODE_INTEGER;
   res->data.integer = data;
 
@@ -28,7 +29,7 @@ bencode_t *decode_string(const char **bencoded) {
     return NULL;
   *bencoded = it + 1;
 
-  auto res = (bencode_t *)malloc(sizeof(bencode_t));
+  bencode_t *res = malloc(sizeof(bencode_t));
   res->type = BENCODE_STRING;
   res->data.string = strndup(*bencoded, content_length);
   *bencoded += content_length;
@@ -43,14 +44,14 @@ bencode_t *decode_list(const char **bencoded) {
   while (**bencoded != 'e') {
     bencode_t *data = decode_bencode(bencoded);
 
-    *current = malloc(sizeof(bencode_t));
+    *current = malloc(sizeof(bencodelist_t));
     (*current)->data = data;
     (*current)->next = NULL;
     current = &((*current)->next);
   }
   (*bencoded)++;
 
-  auto res = (bencode_t *)malloc(sizeof(bencode_t));
+  bencode_t *res = malloc(sizeof(bencode_t));
   res->type = BENCODE_LIST;
   res->data.list = head;
 
