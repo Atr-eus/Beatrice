@@ -1,4 +1,5 @@
 #include "decode_bencode.h"
+#include "utility.h"
 #include <curses.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@ int main(int argc, char **argv) {
   }
 
   bencode_t *out = decode_bencode((const char **)&argv[1]);
+  print_bencode(out);
   free(out);
 
   return 0;
