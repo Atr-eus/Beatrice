@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
   }
 
   bencode_t *out = decode_bencode((const char **)&argv[1]);
-  print_bencode(out);
+  print_bencode(out, 0);
   free(out);
 
   return 0;
