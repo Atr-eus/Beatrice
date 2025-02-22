@@ -34,7 +34,7 @@ void print_dictionary(const bencodedict_t *decoded_dictionary, uint8_t indent) {
 
   while (decoded_dictionary) {
     print_indent(indent + 1);
-    printf("\"%s\": ", decoded_dictionary->key);
+    printf("%s: ", decoded_dictionary->key);
     print_bencode(decoded_dictionary->value, indent + 1);
     decoded_dictionary = decoded_dictionary->next;
   }
@@ -52,7 +52,7 @@ void print_bencode(const bencode_t *decoded, uint8_t indent) {
     printf("%ld\n", decoded->data.integer);
     break;
   case BENCODE_STRING:
-    printf("\"%s\"\n", decoded->data.string);
+    printf("%s\n", decoded->data.string);
     break;
   case BENCODE_LIST:
     print_list(decoded->data.list, indent);

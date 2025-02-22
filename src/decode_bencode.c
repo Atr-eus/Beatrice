@@ -15,6 +15,11 @@ bencode_t *decode_integer(const char **bencoded) {
   *bencoded = it + 1;
 
   bencode_t *res = malloc(sizeof(bencode_t));
+  if (res == NULL) {
+    throw_error("Malloc failure!\n");
+    return NULL;
+  }
+
   res->type = BENCODE_INTEGER;
   res->data.integer = data;
 
@@ -30,12 +35,23 @@ bencode_t *decode_string(const char **bencoded) {
   *bencoded = it + 1;
 
   bencode_t *res = malloc(sizeof(bencode_t));
+  if (res == NULL) {
+    throw_error("Malloc failure!\n");
+    return NULL;
+  }
+
   res->type = BENCODE_STRING;
   res->data.string = strndup(*bencoded, content_length);
+  if (res->data.string == NULL) {
+    throw_error("strndup error!\n");
+    free(res);
+    return NULL;
+  }
+
   *bencoded += content_length;
 
   return res;
-};
+}
 
 bencode_t *decode_list(const char **bencoded) {
   (*bencoded)++;
@@ -43,8 +59,32 @@ bencode_t *decode_list(const char **bencoded) {
   bencodelist_t *head = NULL, **current = &head;
   while (**bencoded != 'e') {
     bencode_t *data = decode_bencode(bencoded);
+    if (data == NULL) {
+      for (bencodelist_t *it = head; head != NULL;) {
+        // MEMORY LEAK
+        // Implement new -> void free_bencode(const bencode_t *bencoded);
+        free(it->data);
+        free(it);
+
+        head = head->next;
+      }
+
+      return NULL;
+    }
 
     *current = malloc(sizeof(bencodelist_t));
+    if (*current == NULL) {
+      // again, MEMORY LEAK. fuck my life
+      free(data);
+
+      for (bencodelist_t *it = head; head != NULL;) {
+        free(it->data);
+        free(it);
+
+        head = head->next;
+      }
+    }
+
     (*current)->data = data;
     (*current)->next = NULL;
     current = &((*current)->next);
@@ -56,7 +96,7 @@ bencode_t *decode_list(const char **bencoded) {
   res->data.list = head;
 
   return res;
-};
+}
 
 bencode_t *decode_dictionary(const char **bencoded) {
   (*bencoded)++;
@@ -78,7 +118,7 @@ bencode_t *decode_dictionary(const char **bencoded) {
   res->data.dict = head;
 
   return res;
-};
+}
 
 bencode_t *decode_bencode(const char **bencoded) {
   if (**bencoded == 'i')

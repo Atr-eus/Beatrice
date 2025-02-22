@@ -3,7 +3,7 @@ CFLAGS := -c -Wall -std=c2x -Iinclude
 LDFLAGS :=
 SRC := $(wildcard src/*.c)
 OBJ := $(SRC:src/%.c=obj/%.o)
-TARGET := program
+TARGET := beatrice
 
 all: $(TARGET)
 
