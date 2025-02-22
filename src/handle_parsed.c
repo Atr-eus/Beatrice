@@ -1,8 +1,10 @@
 #include "handle_parsed.h"
 #include "decode_bencode.h"
+#include "utility.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void print_indent(uint8_t indent) {
@@ -54,6 +56,44 @@ void print_bencode(const bencode_t *decoded, uint8_t indent) {
   case BENCODE_DICTIONARY:
     print_dictionary(decoded->data.dict, indent);
     break;
+  }
+}
+
+char *encode_integer(int64_t n) {
+  char buf[32];
+  size_t content_length = snprintf(buf, sizeof(buf), "i%lde", n);
+
+  char *encoded = malloc(content_length + 1);
+  if (encoded == NULL) {
+    throw_error("malloc error!\n");
+  }
+
+  memcpy(encoded, buf, content_length + 1);
+  return encoded;
+}
+
+char *encode_string(char *s) { return "hello"; }
+
+char *encode_list(bencodelist_t *list) { return "hello"; }
+
+char *encode_dictionary(bencodedict_t *dict) { return "hello"; }
+
+char *encode_bencode(bencode_t *decoded) {
+  switch (decoded->type) {
+  case BENCODE_INTEGER:
+    return encode_integer(decoded->data.integer);
+    break;
+  case BENCODE_STRING:
+    return encode_string(decoded->data.string);
+    break;
+  case BENCODE_LIST:
+    return encode_list(decoded->data.list);
+    break;
+  case BENCODE_DICTIONARY:
+    return encode_dictionary(decoded->data.dict);
+    break;
+  default:
+    return NULL;
   }
 }
 

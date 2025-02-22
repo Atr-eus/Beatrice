@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
   print_bencode(pieces, 0);
 
   printf("%lu\n", strlen(pieces->data.string));
+  printf("%s\n", encode_integer(-12350));
   free(out);
 
   return 0;
