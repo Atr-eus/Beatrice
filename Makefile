@@ -1,6 +1,6 @@
 CC := gcc
 CFLAGS := -c -Wall -std=c2x -Iinclude
-LDFLAGS :=
+LDFLAGS := -lcrypto
 SRC := $(wildcard src/*.c)
 OBJ := $(SRC:src/%.c=obj/%.o)
 TARGET := beatrice

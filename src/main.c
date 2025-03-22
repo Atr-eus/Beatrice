@@ -4,8 +4,6 @@
 #include <curses.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -23,6 +21,7 @@ int main(int argc, char **argv) {
   print_bencode(infodict, 0);
 
   printf("%s\n", encode_bencode(infodict));
+  printf("%s\n", get_info_hash(infodict));
 
   return 0;
 }

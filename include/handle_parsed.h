@@ -17,5 +17,6 @@ char *encode_dictionary(bencodedict_t *dict);
 char *encode_bencode(bencode_t *decoded);
 
 bencode_t *find_by_key(bencodedict_t *dict, const char *target);
+char *get_info_hash(bencode_t *info_dir);
 
 #endif // !HANDLE_PARSED

@@ -2,6 +2,7 @@
 #include "decode_bencode.h"
 #include "utility.h"
 #include <inttypes.h>
+#include <openssl/sha.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -144,4 +145,24 @@ bencode_t *find_by_key(bencodedict_t *dict, const char *target) {
   }
 
   return NULL;
+}
+
+char *get_info_hash(bencode_t *info_dir) {
+  char *encoded = encode_bencode(info_dir);
+  if (!encoded) {
+    throw_error(
+        "failed to get, something wrong with encoding function or the input?");
+  }
+
+  unsigned char hash[SHA_DIGEST_LENGTH];
+  SHA1((unsigned char *)encoded, strlen(encoded), hash);
+  free(encoded);
+
+  char *readable_hash = malloc(SHA_DIGEST_LENGTH * 2 + 1);
+  for (uint8_t i = 0; i < SHA_DIGEST_LENGTH; ++i) {
+    sprintf(readable_hash + i * 2, "%02x", hash[i]);
+  }
+  readable_hash[SHA_DIGEST_LENGTH * 2] = '\0';
+
+  return readable_hash;
 }
