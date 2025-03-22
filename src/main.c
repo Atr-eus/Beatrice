@@ -22,12 +22,7 @@ int main(int argc, char **argv) {
   bencode_t *infodict = find_by_key(out->data.dict, "info");
   print_bencode(infodict, 0);
 
-  bencode_t *pieces = find_by_key(infodict->data.dict, "pieces");
-  print_bencode(pieces, 0);
-
-  printf("%lu\n", strlen(pieces->data.string));
-  printf("%s\n", encode_integer(-12350));
-  free(out);
+  printf("%s\n", encode_bencode(infodict));
 
   return 0;
 }

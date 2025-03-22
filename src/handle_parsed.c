@@ -1,6 +1,7 @@
 #include "handle_parsed.h"
 #include "decode_bencode.h"
 #include "utility.h"
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -60,38 +61,74 @@ void print_bencode(const bencode_t *decoded, uint8_t indent) {
 }
 
 char *encode_integer(int64_t n) {
-  char buf[32];
-  size_t content_length = snprintf(buf, sizeof(buf), "i%lde", n);
+  char buf[64];
+  snprintf(buf, sizeof(buf), "i%" PRId64 "e", n);
 
-  char *encoded = malloc(content_length + 1);
-  if (encoded == NULL) {
-    throw_error("malloc error!\n");
-  }
-
-  memcpy(encoded, buf, content_length + 1);
-  return encoded;
+  return strdup(buf);
 }
 
-char *encode_string(char *s) { return "hello"; }
+char *encode_string(const char *s) {
+  size_t len = strlen(s);
+  size_t size_len = snprintf(NULL, 0, "%zu:", len);
 
-char *encode_list(bencodelist_t *list) { return "hello"; }
+  char *res = malloc(len + size_len + 1);
+  snprintf(res, size_len + 1, "%zu:", len);
+  memcpy(res + size_len, s, len + 1);
 
-char *encode_dictionary(bencodedict_t *dict) { return "hello"; }
+  return res;
+}
+
+char *encode_list(bencodelist_t *list) {
+  char *res = strdup("l");
+
+  bencodelist_t *it = list;
+  while (it) {
+    char *encoded = encode_bencode(it->data);
+    res = realloc(res, strlen(res) + strlen(encoded) + 1);
+    strcat(res, encoded);
+    free(encoded);
+
+    it = it->next;
+  }
+
+  res = realloc(res, strlen(res) + 2);
+  strcat(res, "e");
+
+  return res;
+}
+
+char *encode_dictionary(bencodedict_t *dict) {
+  char *res = strdup("d");
+
+  bencodedict_t *it = dict;
+  while (it) {
+    char *key = encode_string(it->key);
+    char *val = encode_bencode(it->value);
+
+    res = realloc(res, strlen(res) + strlen(key) + strlen(val) + 1);
+    strcat(res, key);
+    strcat(res, val);
+    free(key);
+    free(val);
+
+    it = it->next;
+  }
+
+  res = realloc(res, strlen(res) + 2);
+  strcat(res, "e");
+  return res;
+}
 
 char *encode_bencode(bencode_t *decoded) {
   switch (decoded->type) {
   case BENCODE_INTEGER:
     return encode_integer(decoded->data.integer);
-    break;
   case BENCODE_STRING:
     return encode_string(decoded->data.string);
-    break;
   case BENCODE_LIST:
     return encode_list(decoded->data.list);
-    break;
   case BENCODE_DICTIONARY:
     return encode_dictionary(decoded->data.dict);
-    break;
   default:
     return NULL;
   }
