@@ -4,6 +4,7 @@
 #include <curses.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -15,13 +16,14 @@ int main(int argc, char **argv) {
   // bencode_t *out = decode_bencode((const char **)&argv[1]);
   const char *bencoded = read_torrent(argv[1]);
   bencode_t *out = decode_bencode(&bencoded);
-  print_bencode(out, 0);
 
   bencode_t *infodict = find_by_key(out->data.dict, "info");
   print_bencode(infodict, 0);
 
   printf("%s\n", encode_bencode(infodict));
-  printf("%s\n", get_info_hash(infodict));
+  char *info_hash = get_info_hash(infodict);
+  printf("%s\n", info_hash);
+  printf("%lu\n", strlen(info_hash));
 
   return 0;
 }

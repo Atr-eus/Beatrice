@@ -13,7 +13,10 @@ void print_bencode(const bencode_t *decoded_dictionary, uint8_t indent);
 char *encode_integer(int64_t n);
 char *encode_string(const char *s);
 char *encode_list(bencodelist_t *list);
+
+int32_t dict_cmp(const void *a, const void *b);
 char *encode_dictionary(bencodedict_t *dict);
+
 char *encode_bencode(bencode_t *decoded);
 
 bencode_t *find_by_key(bencodedict_t *dict, const char *target);

@@ -98,21 +98,41 @@ char *encode_list(bencodelist_t *list) {
   return res;
 }
 
+int32_t dict_cmp(const void *a, const void *b) {
+  bencodedict_t *dicta = *(bencodedict_t **)a;
+  bencodedict_t *dictb = *(bencodedict_t **)b;
+
+  return strcmp(dicta->key, dictb->key);
+}
+
 char *encode_dictionary(bencodedict_t *dict) {
   char *res = strdup("d");
 
+  size_t dict_sz = 0;
   bencodedict_t *it = dict;
   while (it) {
-    char *key = encode_string(it->key);
-    char *val = encode_bencode(it->value);
+    dict_sz++;
+    it = it->next;
+  }
+
+  bencodedict_t **dict_list = malloc(dict_sz * sizeof(bencodedict_t *));
+  it = dict;
+  for (size_t i = 0; i < dict_sz; ++i) {
+    dict_list[i] = it;
+    it = it->next;
+  }
+  qsort(dict_list, dict_sz, sizeof(bencodedict_t *), dict_cmp);
+
+  for (size_t i = 0; i < dict_sz; ++i) {
+    printf("%s <\n", dict_list[i]->key);
+    char *key = encode_string(dict_list[i]->key);
+    char *val = encode_bencode(dict_list[i]->value);
 
     res = realloc(res, strlen(res) + strlen(key) + strlen(val) + 1);
     strcat(res, key);
     strcat(res, val);
     free(key);
     free(val);
-
-    it = it->next;
   }
 
   res = realloc(res, strlen(res) + 2);
